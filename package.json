@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "typescript": "^4.8.4"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1232.0"
+  }
+}
