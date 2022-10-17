@@ -1,4 +1,5 @@
 {
+  "name": "sqs-manager",
   "version": "1.0.0",
   "description": "SQS-manager",
   "scripts": {
