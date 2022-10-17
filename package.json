@@ -1,8 +1,16 @@
 {
+  "version": "1.0.0",
+  "description": "SQS-manager",
+  "scripts": {
+    "build": "tsc",
+    "start": "yarn build && node ./dist/app.js"
+  },
   "devDependencies": {
     "typescript": "^4.8.4"
   },
   "dependencies": {
-    "aws-sdk": "^2.1232.0"
+    "@types/util.promisify": "^1.0.4",
+    "aws-sdk": "^2.1232.0",
+    "sqs-consumer": "^5.7.0"
   }
 }
