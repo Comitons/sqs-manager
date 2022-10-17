@@ -1,7 +1,9 @@
 {
   "name": "sqs-manager",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "SQS-manager",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "start": "yarn build && node ./dist/app.js"

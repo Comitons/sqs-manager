@@ -1,5 +1,11 @@
 {
   "compilerOptions": {
+    "declaration": true,
+    "noImplicitAny": false,
+    "removeComments": true,
+    "noLib": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
     /* Visit https://aka.ms/tsconfig to read more about this file */
 
     /* Projects */
