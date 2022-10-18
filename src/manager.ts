@@ -1,12 +1,14 @@
 import * as AWS from "aws-sdk";
 import { SQS } from "aws-sdk";
-import * as util from "util";
+import * as Logger from "pino";
+import { Consumer } from "sqs-consumer";
 import { ReceiveMessageResponse } from "./types";
 
-export class Manager {
-  public sqs: SQS;
+export class ManagerSQS {
+  private sqs: SQS;
+  private logger: Logger.Logger;
 
-  constructor() {
+  constructor(private readonly topics: string[]) {
     // Set the region
     AWS.config.update({ region: "REGION" });
 
@@ -15,6 +17,15 @@ export class Manager {
       apiVersion: "2012-11-05",
       endpoint: "http://localhost:9324",
     });
+
+    this.logger = Logger.pino();
+  }
+
+  async connect() {
+    for (const topic of this.topics) {
+      await this.create(topic);
+    }
+    this.logger.info("connected");
   }
 
   async list(): Promise<SQS.ListQueuesResult> {
@@ -33,7 +44,7 @@ export class Manager {
     });
   }
 
-  async create(name: string) {
+  private create(name: string) {
     var params = {
       QueueName: name,
       Attributes: {
@@ -87,32 +98,17 @@ export class Manager {
     });
   }
 
-  async sendMessage(name: string) {
+  async sendMessage(topic: string, body: any) {
     var params = {
       // Remove DelaySeconds parameter and value for FIFO queues
       DelaySeconds: 0,
-      MessageAttributes: {
-        Title: {
-          DataType: "String",
-          StringValue: "The Whistler",
-        },
-        Author: {
-          DataType: "String",
-          StringValue: "John Grisham",
-        },
-        WeeksOn: {
-          DataType: "Number",
-          StringValue: "6",
-        },
-      },
-      MessageBody:
-        "Information about current NY Times fiction bestseller for week of 12/11/2016.",
+      MessageBody: JSON.stringify(body),
       // MessageDeduplicationId: "TheWhistler",  // Required for FIFO queues
       // MessageGroupId: "Group1",  // Required for FIFO queues
-      QueueUrl: await this.getQueryUrl(name),
+      QueueUrl: await this.getQueryUrl(topic),
     };
 
-    console.log(await this.getQueryUrl(name));
+    console.log(await this.getQueryUrl(topic));
 
     this.sqs.sendMessage(params, function (err, data) {
       if (err) {
@@ -123,12 +119,20 @@ export class Manager {
     });
   }
 
-  async receivedMessage(name: string): Promise<ReceiveMessageResponse> {
+  async addConsumerListen(topic: string, handleMessage: (message: any) => Promise<void>) {
+    const app = Consumer.create({
+      queueUrl: await this.getQueryUrl(topic),
+      handleMessage: handleMessage,
+    });
+    app.start();
+  }
+
+  async receivedMessage(topic: string): Promise<ReceiveMessageResponse> {
     var params = {
       AttributeNames: ["SentTimestamp"],
       MaxNumberOfMessages: 10,
       MessageAttributeNames: ["All"],
-      QueueUrl: await this.getQueryUrl(name),
+      QueueUrl: await this.getQueryUrl(topic),
       VisibilityTimeout: 20,
       WaitTimeSeconds: 0,
     };
@@ -139,17 +143,17 @@ export class Manager {
           console.log("Receive Error", err);
         } else if (data.Messages) {
           const deleteParams = {
-            QueueUrl: await this.getQueryUrl(name),
+            QueueUrl: await this.getQueryUrl(topic),
             ReceiptHandle: data.Messages[0].ReceiptHandle!,
           };
 
           this.sqs.deleteMessage(deleteParams, function (err, data) {
             if (err) {
-              rej(err);
               console.log("Delete Error", err);
+              rej(err);
             } else {
-              res(data);
               console.log("Message Deleted", data);
+              res(data);
             }
           });
         }

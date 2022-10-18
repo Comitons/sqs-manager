@@ -1,4 +1,4 @@
-import { Manager } from "./manager";
+import { ManagerSQS as Manager } from "./manager";
 import { ReceiveMessageResponse } from "./types";
 function hasMessages(response: ReceiveMessageResponse): boolean {
   return Boolean(response.Messages) && response.Messages!.length > 0;
@@ -6,6 +6,7 @@ function hasMessages(response: ReceiveMessageResponse): boolean {
 export interface ConsumerOptions {
   nameTopic: string;
   handleMessage?(message: any): Promise<void>;
+  
 }
 
 export class Consumer {
@@ -14,7 +15,7 @@ export class Consumer {
   private handleMessage?: (message: any) => Promise<void>;
 
   constructor(options: ConsumerOptions) {
-    this.manager = new Manager();
+    this.manager = new Manager([]);
     this.nameTopic = options.nameTopic;
     this.handleMessage = options.handleMessage;
   }
