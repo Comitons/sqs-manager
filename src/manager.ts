@@ -119,7 +119,7 @@ export class ManagerSQS {
     });
   }
 
-  async addConsumerListen(topic: string, handleMessage: (message: any) => Promise<void>) {
+  async addConsumerListener(topic: string, handleMessage: (message: any) => Promise<void>) {
     const app = Consumer.create({
       queueUrl: await this.getQueryUrl(topic),
       handleMessage: handleMessage,
